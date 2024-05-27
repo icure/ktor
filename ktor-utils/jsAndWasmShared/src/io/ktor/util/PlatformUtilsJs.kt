@@ -25,3 +25,5 @@ private fun hasNodeApi(): Boolean = js(
 
 public actual val PlatformUtils.platform: Platform
     get() = if (hasNodeApi()) Platform.Node else Platform.Browser
+
+public fun canRequire(): Boolean = js("typeof require === 'function'")

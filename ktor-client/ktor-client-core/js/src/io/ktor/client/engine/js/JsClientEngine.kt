@@ -77,7 +77,7 @@ internal class JsClientEngine(
         return when (PlatformUtils.platform) {
             Platform.Browser -> js("new WebSocket(urlString_capturingHack, protocols)")
             else -> {
-                val ws_capturingHack = js("eval('require')('ws')")
+                val ws_capturingHack = if (canRequire()) js("eval('require')('ws')") else wsNode
                 val headers_capturingHack: dynamic = object {}
                 headers.forEach { name, values ->
                     headers_capturingHack[name] = values.joinToString(",")
@@ -159,3 +159,7 @@ private fun org.w3c.fetch.Headers.mapToKtor(): Headers = buildHeaders {
  */
 @Suppress("MemberVisibilityCanBePrivate")
 public class JsError(public val origin: dynamic) : Throwable("Error from javascript[$origin].")
+
+@JsModule("ws")
+@JsNonModule
+private external val wsNode: dynamic

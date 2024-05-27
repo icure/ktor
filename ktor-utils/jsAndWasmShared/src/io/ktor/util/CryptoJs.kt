@@ -48,12 +48,12 @@ private fun windowCrypto(): Crypto = js("(window ? (window.crypto ? window.crypt
 // JS IR backend doesn't reserve names accessed inside js("") calls
 private val _crypto: Crypto by lazy { // lazy because otherwise it's untestable due to evaluation order
     when (PlatformUtils.platform) {
-        Platform.Node -> requireCrypto()
+        Platform.Node -> if (canRequire()) requireCrypto() else nodeCryptoModule()
         else -> windowCrypto()
     }
 }
 
-private external class Crypto {
+internal external class Crypto {
     val subtle: SubtleCrypto
 
     fun getRandomValues(array: Int8Array)
@@ -61,7 +61,9 @@ private external class Crypto {
     fun randomFillSync(array: Int8Array)
 }
 
-private external class SubtleCrypto {
+internal expect fun nodeCryptoModule(): Crypto
+
+internal external class SubtleCrypto {
     fun digest(algoName: String, buffer: Int8Array): Promise<ArrayBuffer>
 }
 
