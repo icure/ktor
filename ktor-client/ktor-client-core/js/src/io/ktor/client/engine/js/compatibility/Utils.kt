@@ -47,11 +47,23 @@ internal fun AbortController(): AbortController {
     return when (PlatformUtils.platform) {
         Platform.Browser -> js("new AbortController()")
         else -> {
-            @Suppress("UNUSED_VARIABLE")
-            val controller = js("eval('require')('abort-controller')")
-            js("new controller()")
+            @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
+            if (canRequire()) {
+                @Suppress("UNUSED_VARIABLE")
+                val controller = js("eval('require')('abort-controller')")
+                js("new controller()")
+            } else {
+                NodeAbortController()
+            } as AbortController
         }
     }
+}
+
+@JsModule("abort-controller")
+@JsNonModule
+private external class NodeAbortController : AbortController {
+    override var signal: AbortSignal
+    override fun abort()
 }
 
 internal fun CoroutineScope.readBody(
@@ -62,7 +74,11 @@ internal fun CoroutineScope.readBody(
 }
 
 private fun jsRequireNodeFetch(): dynamic = try {
-    js("eval('require')('node-fetch')")
+    if (canRequire()) js("eval('require')('node-fetch')") else nodeFetch
 } catch (cause: dynamic) {
     throw Error("Error loading module 'node-fetch': $cause")
 }
+
+@JsModule("node-fetch")
+@JsNonModule
+private external val nodeFetch: dynamic
