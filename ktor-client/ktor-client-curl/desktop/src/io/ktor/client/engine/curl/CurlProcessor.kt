@@ -67,7 +67,7 @@ internal class CurlProcessor(coroutineContext: CoroutineContext) {
             val api = curlApi!!
             while (!requestQueue.isClosedForReceive) {
                 drainRequestQueue(api)
-                api.perform(requestCounter)
+                api.perform { requestCounter.value }
             }
         }
     }

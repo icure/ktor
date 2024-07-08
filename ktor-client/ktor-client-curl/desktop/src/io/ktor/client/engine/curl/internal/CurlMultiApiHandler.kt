@@ -138,12 +138,12 @@ internal class CurlMultiApiHandler : Closeable {
     }
 
     @OptIn(ExperimentalForeignApi::class)
-    internal fun perform(counter: AtomicLong) {
+    internal fun perform(getCount: () -> Long) {
         if (activeHandles.isEmpty()) return
 
         memScoped {
             val transfersRunning = alloc<IntVar>()
-            val requestId = counter.value
+            val requestId = getCount()
             do {
                 synchronized(easyHandlesToUnpauseLock) {
                     var handle = easyHandlesToUnpause.removeFirstOrNull()
@@ -159,7 +159,7 @@ internal class CurlMultiApiHandler : Closeable {
                 if (transfersRunning.value < activeHandles.size) {
                     handleCompleted()
                 }
-            } while (transfersRunning.value != 0 && requestId == counter.value)
+            } while (transfersRunning.value != 0 && requestId == getCount())
         }
     }
 
